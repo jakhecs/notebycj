@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "351602177212",
+    "project_id": "notesbycj",
+    "storage_bucket": "notesbycj.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:351602177212:android:b553126e3db70743ab4cb9",
+        "android_client_info": {
+          "package_name": "com.jakhecs.notesbycj"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAKUweFnpgR53jfADxvLGLhjlOad5Snt18"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
