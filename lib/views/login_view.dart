@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:notesbycj/constants/routes.dart';
+import 'package:notesbycj/services/auth/auth_exceptions.dart';
+import 'package:notesbycj/services/auth/auth_service.dart';
 import 'package:notesbycj/utilities/show_error_dialog.dart';
 
 class LoginView extends StatefulWidget {
@@ -53,14 +54,14 @@ class _LoginViewState extends State<LoginView> {
                 final password = _password.text;
 
                 try {
-                  await FirebaseAuth.instance.signInWithEmailAndPassword(
+                  await AuthService.firebase().logIn(
                     email: email,
                     password: password,
                   );
 
-                  final user = FirebaseAuth.instance.currentUser;
+                  final user = AuthService.firebase().currentUser;
 
-                  if (user?.emailVerified ?? false) {
+                  if (user?.isEmailVerified ?? false) {
                     if (context.mounted) {
                       Navigator.of(context).pushNamedAndRemoveUntil(
                         notesRoute,
@@ -75,22 +76,27 @@ class _LoginViewState extends State<LoginView> {
                       );
                     }
                   }
-                } on FirebaseAuthException catch (e) {
-                  const errorMessages = {
-                    'user-not-found': 'Utilisateur introuvable.',
-                    'wrong-password': 'Mot de passe incorrect.',
-                    'invalid-credential':
-                        'Les identifiants fournis sont incorrects (email ou mot de passe invalide).',
-                    'invalid-email': 'Email invalide.',
-                    'too-many-requests':
-                        'Trop de tentatives. Veuillez réessayer plus tard.',
-                    'network-request-failed':
-                        'Erreur de connexion réseau. Veuillez vérifier votre connexion.',
-                  };
-                  final errorMessage = errorMessages[e.code] ??
-                      'Une erreur inconnue est survenue: ${e.code}';
+                } on UserNotFoundAuthException {
                   if (context.mounted) {
-                    await showErrorDialog(context, errorMessage);
+                    await showErrorDialog(context, 'Utilisateur introuvable.');
+                  }
+                } on WrongPasswordAuthException {
+                  if (context.mounted) {
+                    await showErrorDialog(context, 'Mot de passe incorrect.');
+                  }
+                } on InvalidCredentialAuthException {
+                  if (context.mounted) {
+                    await showErrorDialog(context,
+                        'Les identifiants fournis sont incorrects (email ou mot de passe invalide).');
+                  }
+                } on InvalidEmailAuthException {
+                  if (context.mounted) {
+                    await showErrorDialog(context, 'Email invalide.');
+                  }
+                } on GenericAuthException {
+                  if (context.mounted) {
+                    await showErrorDialog(
+                        context, 'Une erreur inconnue est survenue.');
                   }
                 }
               },

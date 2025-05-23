@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:notesbycj/constants/routes.dart';
+import 'package:notesbycj/services/auth/auth_service.dart';
 import 'package:notesbycj/utilities/show_error_dialog.dart';
+import 'package:notesbycj/services/auth/auth_exceptions.dart';
 
 class RegisterView extends StatefulWidget {
   const RegisterView({super.key});
@@ -52,37 +53,33 @@ class _RegisterViewState extends State<RegisterView> {
                 final email = _email.text;
                 final password = _password.text;
                 try {
-                  await FirebaseAuth.instance.createUserWithEmailAndPassword(
+                  await AuthService.firebase().createdUser(
                     email: email,
                     password: password,
                   );
-                  final user = FirebaseAuth.instance.currentUser;
-                  await user?.sendEmailVerification();
+                  AuthService.firebase().sendEmailVerification();
                   if (context.mounted) {
                     Navigator.of(context).pushNamed(
                       verifyEmailRoute,
                     );
                   }
-                } on FirebaseAuthException catch (e) {
-                  const errorMessages = {
-                    'email-already-in-use':
-                        'Cet email est déjà utilisé par un autre utilisateur.',
-                    'invalid-email': 'Email invalide.',
-                    'operation-not-allowed':
-                        'L\'opération n\'est pas autorisée pour cette application.',
-                    'weak-password':
-                        'Le mot de passe doit comporter au moins 6 caractères.',
-                    'app-not-authorized':
-                        'L\'application n\'est pas autorisée à utiliser ce service.',
-                    'too-many-requests':
-                        'Trop de tentatives. Veuillez réessayer plus tard.',
-                    'network-request-failed':
-                        'Erreur de connexion réseau. Veuillez vérifier votre connexion.',
-                  };
-                  final errorMessage = errorMessages[e.code] ??
-                      'Une erreur inconnue est survenue: ${e.code}';
+                } on WeakPasswordRegisterException {
                   if (context.mounted) {
-                    await showErrorDialog(context, errorMessage);
+                    await showErrorDialog(context, 'Mot de passe trop faible.');
+                  }
+                } on InvalidEmailRegisterException {
+                  if (context.mounted) {
+                    await showErrorDialog(context, 'Email invalide.');
+                  }
+                } on GenericAuthException {
+                  if (context.mounted) {
+                    await showErrorDialog(
+                        context, 'Une erreur inconnue est survenue.');
+                  }
+                } on EmailAlreadyInUseRegisterException {
+                  if (context.mounted) {
+                    await showErrorDialog(context,
+                        'Cet email est déjà utilisé par un autre utilisateur.');
                   }
                 }
               },
