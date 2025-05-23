@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'dart:developer' as devtools show log;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:notesbycj/constants/routes.dart';
+import 'package:notesbycj/utilities/show_error_dialog.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -63,15 +63,21 @@ class _LoginViewState extends State<LoginView> {
                     (route) => false,
                   );
                 } on FirebaseAuthException catch (e) {
-                  if (e.code == 'user-not-found') {
-                    devtools.log('Utilisateur introuvable');
-                  } else if (e.code == 'wrong-password') {
-                    devtools.log('Mot de passe incorrect');
-                  } else if (e.code == 'invalid-credential') {
-                    devtools.log(
-                        'Les identifiants fournis sont incorrects (email ou mot de passe invalide).');
-                  } else {
-                    devtools.log('Erreur inconnue: ${e.code}');
+                  const errorMessages = {
+                    'user-not-found': 'Utilisateur introuvable.',
+                    'wrong-password': 'Mot de passe incorrect.',
+                    'invalid-credential':
+                        'Les identifiants fournis sont incorrects (email ou mot de passe invalide).',
+                    'invalid-email': 'Email invalide.',
+                    'too-many-requests':
+                        'Trop de tentatives. Veuillez réessayer plus tard.',
+                    'network-request-failed':
+                        'Erreur de connexion réseau. Veuillez vérifier votre connexion.',
+                  };
+                  final errorMessage = errorMessages[e.code] ??
+                      'Une erreur inconnue est survenue: ${e.code}';
+                  if (context.mounted) {
+                    await showErrorDialog(context, errorMessage);
                   }
                 }
               },
