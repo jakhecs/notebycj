@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:developer' as devtools show log;
 import 'package:firebase_auth/firebase_auth.dart';
 
 class RegisterView extends StatefulWidget {
@@ -19,7 +20,6 @@ class _RegisterViewState extends State<RegisterView> {
     super.dispose();
   }
 
-  @override
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -57,26 +57,25 @@ class _RegisterViewState extends State<RegisterView> {
                     password: password,
                   );
 
-                  print(user);
+                  devtools.log(user.toString());
                 } on FirebaseAuthException catch (e) {
-                  print('Erreur: ${e.message}');
-                  print('Code: ${e.code}');
                   if (e.code == 'user-already-exists') {
-                    print('Utilisateur déjà existant');
+                    devtools.log('Utilisateur déjà existant');
                   } else if (e.code == 'invalid-email') {
-                    print('Email invalide');
+                    devtools.log('Email invalide');
                   } else if (e.code == 'operation-not-allowed') {
-                    print(
+                    devtools.log(
                         'L\'opération n\'est pas autorisée pour cette application');
                   } else if (e.code == 'weak-password') {
-                    print('Mot de passe trop faible');
+                    devtools.log('Mot de passe trop faible');
                   } else if (e.code == 'app-not-authorized') {
-                    print(
+                    devtools.log(
                         'L\'application n\'est pas autorisée à utiliser ce service');
                   } else if (e.code == 'too-many-requests') {
-                    print('Trop de requêtes ont été envoyées à ce service');
+                    devtools
+                        .log('Trop de requêtes ont été envoyées à ce service');
                   } else {
-                    print('Erreur inconnue: ${e.code}');
+                    devtools.log('Erreur inconnue: ${e.code}');
                   }
                 }
               },
