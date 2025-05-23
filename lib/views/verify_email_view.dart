@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:notesbycj/constants/routes.dart';
 
 class VerifyEmailView extends StatefulWidget {
   const VerifyEmailView({super.key});
@@ -16,7 +17,10 @@ class _VerifyEmailViewState extends State<VerifyEmailView> {
         title: const Text('Vérification de l\'email'),
       ),
       body: Column(children: [
-        const Text("Vérifiez votre email"),
+        const Text(
+            "Un email de vérification vient de vous être envoyé. S'il vous plaît, ouvrer votre boîte de réception et cliquer sur le lien pour vérifier votre adresse email."),
+        const Text(
+            "Vous n'avez pas reçu de mail de vérification ? Cliquez sur le bouton ci-dessous."),
         TextButton(
           onPressed: () async {
             final user = FirebaseAuth.instance.currentUser;
@@ -24,42 +28,17 @@ class _VerifyEmailViewState extends State<VerifyEmailView> {
           },
           child: const Text("Envoyé le mail de vérification"),
         ),
+        TextButton(
+          onPressed: () async {
+            await FirebaseAuth.instance.signOut();
+            Navigator.of(context).pushNamedAndRemoveUntil(
+              registerRoute,
+              (route) => false,
+            );
+          },
+          child: const Text("Retourner à la page de connexion"),
+        ),
       ]),
     );
   }
 }
-
-// class _VerifyEmailViewState extends State<VerifyEmailView> {
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         title: const Text('Vérification de l\'email'),
-//       ),
-//       body: Column(
-//         children: [
-//           const Text("Vérifiez votre email"),
-//           TextButton(
-//             onPressed: () async {
-//               final user = FirebaseAuth.instance.currentUser;
-//               if (user != null) {
-//                 await user.sendEmailVerification();
-//                 await user
-//                     .reload(); // Recharge l'état pour vérifier la mise à jour
-//                 if (user.emailVerified) {
-//                   // Si vérifié, redirige ou mets à jour l'UI
-//                   ScaffoldMessenger.of(context).showSnackBar(
-//                     const SnackBar(content: Text('Email vérifié !')),
-//                   );
-//                   // Optionnel : Navigue vers une autre vue si nécessaire
-//                   // Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => NextScreen()));
-//                 }
-//               }
-//             },
-//             child: const Text("Envoyé le mail de vérification"),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }

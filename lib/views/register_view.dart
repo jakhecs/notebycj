@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'dart:developer' as devtools show log;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:notesbycj/constants/routes.dart';
+import 'package:notesbycj/utilities/show_error_dialog.dart';
 
 class RegisterView extends StatefulWidget {
   const RegisterView({super.key});
@@ -52,31 +52,37 @@ class _RegisterViewState extends State<RegisterView> {
                 final email = _email.text;
                 final password = _password.text;
                 try {
-                  final user = await FirebaseAuth.instance
-                      .createUserWithEmailAndPassword(
+                  await FirebaseAuth.instance.createUserWithEmailAndPassword(
                     email: email,
                     password: password,
                   );
-
-                  devtools.log(user.toString());
+                  final user = FirebaseAuth.instance.currentUser;
+                  await user?.sendEmailVerification();
+                  if (context.mounted) {
+                    Navigator.of(context).pushNamed(
+                      verifyEmailRoute,
+                    );
+                  }
                 } on FirebaseAuthException catch (e) {
-                  if (e.code == 'user-already-exists') {
-                    devtools.log('Utilisateur déjà existant');
-                  } else if (e.code == 'invalid-email') {
-                    devtools.log('Email invalide');
-                  } else if (e.code == 'operation-not-allowed') {
-                    devtools.log(
-                        'L\'opération n\'est pas autorisée pour cette application');
-                  } else if (e.code == 'weak-password') {
-                    devtools.log('Mot de passe trop faible');
-                  } else if (e.code == 'app-not-authorized') {
-                    devtools.log(
-                        'L\'application n\'est pas autorisée à utiliser ce service');
-                  } else if (e.code == 'too-many-requests') {
-                    devtools
-                        .log('Trop de requêtes ont été envoyées à ce service');
-                  } else {
-                    devtools.log('Erreur inconnue: ${e.code}');
+                  const errorMessages = {
+                    'email-already-in-use':
+                        'Cet email est déjà utilisé par un autre utilisateur.',
+                    'invalid-email': 'Email invalide.',
+                    'operation-not-allowed':
+                        'L\'opération n\'est pas autorisée pour cette application.',
+                    'weak-password':
+                        'Le mot de passe doit comporter au moins 6 caractères.',
+                    'app-not-authorized':
+                        'L\'application n\'est pas autorisée à utiliser ce service.',
+                    'too-many-requests':
+                        'Trop de tentatives. Veuillez réessayer plus tard.',
+                    'network-request-failed':
+                        'Erreur de connexion réseau. Veuillez vérifier votre connexion.',
+                  };
+                  final errorMessage = errorMessages[e.code] ??
+                      'Une erreur inconnue est survenue: ${e.code}';
+                  if (context.mounted) {
+                    await showErrorDialog(context, errorMessage);
                   }
                 }
               },
