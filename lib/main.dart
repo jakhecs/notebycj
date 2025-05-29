@@ -6,24 +6,24 @@ import 'package:notesbycj/views/notes/notes_view.dart';
 import 'package:notesbycj/views/register_view.dart';
 import 'package:notesbycj/views/verify_email_view.dart';
 import 'package:notesbycj/services/auth/auth_service.dart';
-import 'package:notesbycj/views/notes/new_note_view.dart';
+import 'package:notesbycj/views/notes/create_update_note_view.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(MaterialApp(
-    title: 'Flutter Demo',
-    theme: ThemeData(
-      primarySwatch: Colors.blue,
+  runApp(
+    MaterialApp(
+      title: 'Flutter Demo',
+      theme: ThemeData(primarySwatch: Colors.blue),
+      home: const HomePage(),
+      routes: {
+        loginRoute: (context) => const LoginView(),
+        notesRoute: (context) => const NotesView(),
+        registerRoute: (context) => const RegisterView(),
+        verifyEmailRoute: (context) => const VerifyEmailView(),
+        createOrUpdateNoteRoute: (context) => const CreateUpdateNoteView(),
+      },
     ),
-    home: const HomePage(),
-    routes: {
-      loginRoute: (context) => const LoginView(),
-      notesRoute: (context) => const NotesView(),
-      registerRoute: (context) => const RegisterView(),
-      verifyEmailRoute: (context) => const VerifyEmailView(),
-      newNoteRoute: (context) => const NewNoteView(),
-    },
-  ));
+  );
 }
 
 class HomePage extends StatelessWidget {
