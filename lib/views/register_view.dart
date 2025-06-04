@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:notesbycj/constants/routes.dart';
-import 'package:notesbycj/services/auth/auth_service.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:notesbycj/services/auth/auth_exceptions.dart';
+import 'package:notesbycj/services/auth/bloc/auth_bloc.dart';
+import 'package:notesbycj/services/auth/bloc/auth_event.dart';
+import 'package:notesbycj/services/auth/bloc/auth_state.dart';
 import 'package:notesbycj/utilities/dialogs/error_dialog.dart';
 
 class RegisterView extends StatefulWidget {
@@ -12,8 +14,15 @@ class RegisterView extends StatefulWidget {
 }
 
 class _RegisterViewState extends State<RegisterView> {
-  final TextEditingController _email = TextEditingController();
-  final TextEditingController _password = TextEditingController();
+  late final TextEditingController _email;
+  late final TextEditingController _password;
+
+  @override
+  void initState() {
+    _email = TextEditingController();
+    _password = TextEditingController();
+    super.initState();
+  }
 
   @override
   void dispose() {
@@ -24,72 +33,58 @@ class _RegisterViewState extends State<RegisterView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Créer un compte')),
-      body: Column(
-        children: [
-          TextField(
-            controller: _email,
-            enableSuggestions: false,
-            autocorrect: false,
-            keyboardType: TextInputType.emailAddress,
-            decoration: InputDecoration(hintText: 'Entrez votre email'),
-          ),
-          TextField(
-            controller: _password,
-            obscureText: true,
-            enableSuggestions: false,
-            autocorrect: false,
-            decoration: InputDecoration(hintText: 'Entrez votre mot de passe'),
-          ),
-          TextButton(
-            onPressed: () async {
-              final email = _email.text;
-              final password = _password.text;
-              try {
-                await AuthService.firebase().createdUser(
-                  email: email,
-                  password: password,
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) async {
+        if (state is AuthStateRegistering) {
+          if (state.exception is WeakPasswordRegisterException) {
+            await showErrorDialog(context, 'Mot de passe trop faible.');
+          } else if (state.exception is InvalidEmailRegisterException) {
+            await showErrorDialog(context, 'Email invalide.');
+          } else if (state.exception is GenericAuthException) {
+            await showErrorDialog(context, 'Une erreur inconnue est survenue.');
+          } else if (state.exception is EmailAlreadyInUseRegisterException) {
+            await showErrorDialog(context, 'Cet email existe déjà .');
+          }
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(title: const Text('Créer un compte')),
+        body: Column(
+          children: [
+            TextField(
+              controller: _email,
+              enableSuggestions: false,
+              autocorrect: false,
+              keyboardType: TextInputType.emailAddress,
+              decoration: InputDecoration(hintText: 'Entrez votre email'),
+            ),
+            TextField(
+              controller: _password,
+              obscureText: true,
+              enableSuggestions: false,
+              autocorrect: false,
+              decoration: InputDecoration(
+                hintText: 'Entrez votre mot de passe',
+              ),
+            ),
+            TextButton(
+              onPressed: () async {
+                final email = _email.text;
+                final password = _password.text;
+                context.read<AuthBloc>().add(
+                  AuthEventRegister(email, password),
                 );
-                AuthService.firebase().sendEmailVerification();
-                if (context.mounted) {
-                  Navigator.of(context).pushNamed(verifyEmailRoute);
-                }
-              } on WeakPasswordRegisterException {
-                if (context.mounted) {
-                  await showErrorDialog(context, 'Mot de passe trop faible.');
-                }
-              } on InvalidEmailRegisterException {
-                if (context.mounted) {
-                  await showErrorDialog(context, 'Email invalide.');
-                }
-              } on GenericAuthException {
-                if (context.mounted) {
-                  await showErrorDialog(
-                    context,
-                    'Une erreur inconnue est survenue.',
-                  );
-                }
-              } on EmailAlreadyInUseRegisterException {
-                if (context.mounted) {
-                  await showErrorDialog(
-                    context,
-                    'Cet email est déjà utilisé par un autre utilisateur.',
-                  );
-                }
-              }
-            },
-            child: const Text('Créer un compte'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(
-                context,
-              ).pushNamedAndRemoveUntil(loginRoute, (route) => false);
-            },
-            child: const Text("Déjà un compte ? Se connecter!"),
-          ),
-        ],
+              },
+              child: const Text('Créer un compte'),
+            ),
+            TextButton(
+              onPressed: () {
+                context.read<AuthBloc>().add(const AuthEventLogout());
+              },
+              child: const Text("Déjà un compte ? Se connecter!"),
+            ),
+          ],
+        ),
       ),
     );
   }

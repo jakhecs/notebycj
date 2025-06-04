@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:notesbycj/constants/routes.dart';
 import 'package:notesbycj/services/auth/auth_exceptions.dart';
 import 'package:notesbycj/services/auth/bloc/auth_bloc.dart';
 import 'package:notesbycj/services/auth/bloc/auth_event.dart';
 import 'package:notesbycj/services/auth/bloc/auth_state.dart';
 import 'package:notesbycj/utilities/dialogs/error_dialog.dart';
+import 'package:notesbycj/utilities/dialogs/loading_dialog.dart';
 
 class LoginView extends StatefulWidget {
   const LoginView({super.key});
@@ -15,8 +15,17 @@ class LoginView extends StatefulWidget {
 }
 
 class _LoginViewState extends State<LoginView> {
-  final TextEditingController _email = TextEditingController();
-  final TextEditingController _password = TextEditingController();
+  late final TextEditingController _email;
+  late final TextEditingController _password;
+
+  CloseDialog? _closeDialogHandle;
+
+  @override
+  void initState() {
+    _email = TextEditingController();
+    _password = TextEditingController();
+    super.initState();
+  }
 
   @override
   void dispose() {
@@ -27,37 +36,51 @@ class _LoginViewState extends State<LoginView> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Connexion')),
-      body: Column(
-        children: [
-          TextField(
-            controller: _email,
-            enableSuggestions: false,
-            autocorrect: false,
-            keyboardType: TextInputType.emailAddress,
-            decoration: InputDecoration(hintText: 'Entrez votre email'),
-          ),
-          TextField(
-            controller: _password,
-            obscureText: true,
-            enableSuggestions: false,
-            autocorrect: false,
-            decoration: InputDecoration(hintText: 'Entrez votre mot de passe'),
-          ),
-          BlocListener<AuthBloc, AuthState>(
-            listener: (context, state) async {
-              if (state is AuthStateLoggedOut) {
-                if (state.exception is UserNotFoundAuthException) {
-                  await showErrorDialog(context, 'Utilisateur introuvable.');
-                } else if (state.exception is InvalidCredentialAuthException) {
-                  await showErrorDialog(context, 'Identifiants  incorrects.');
-                } else if (state.exception is GenericAuthException) {
-                  await showErrorDialog(context, 'Errer inconnu est survenue.');
-                }
-              }
-            },
-            child: TextButton(
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) async {
+        if (state is AuthStateLoggedOut) {
+          final closeDialog = _closeDialogHandle;
+
+          if (!state.isLoading && closeDialog != null) {
+            closeDialog();
+            _closeDialogHandle = null;
+          } else if (state.isLoading && closeDialog == null) {
+            _closeDialogHandle = showLoadingDialog(
+              context: context,
+              text: 'Connexion en cours...',
+            );
+          }
+
+          if (state.exception is UserNotFoundAuthException) {
+            await showErrorDialog(context, 'Utilisateur introuvable.');
+          } else if (state.exception is InvalidCredentialAuthException) {
+            await showErrorDialog(context, 'Identifiants  incorrects.');
+          } else if (state.exception is GenericAuthException) {
+            await showErrorDialog(context, 'Errer inconnu est survenue.');
+          }
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(title: const Text('Connexion')),
+        body: Column(
+          children: [
+            TextField(
+              controller: _email,
+              enableSuggestions: false,
+              autocorrect: false,
+              keyboardType: TextInputType.emailAddress,
+              decoration: InputDecoration(hintText: 'Entrez votre email'),
+            ),
+            TextField(
+              controller: _password,
+              obscureText: true,
+              enableSuggestions: false,
+              autocorrect: false,
+              decoration: InputDecoration(
+                hintText: 'Entrez votre mot de passe',
+              ),
+            ),
+            TextButton(
               onPressed: () {
                 final email = _email.text;
                 final password = _password.text;
@@ -65,16 +88,14 @@ class _LoginViewState extends State<LoginView> {
               },
               child: const Text('Connexion'),
             ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(
-                context,
-              ).pushNamedAndRemoveUntil(registerRoute, (route) => false);
-            },
-            child: const Text("Pas encore de compte ? Créez-en un!"),
-          ),
-        ],
+            TextButton(
+              onPressed: () {
+                context.read<AuthBloc>().add(const AuthEventShouldRegister());
+              },
+              child: const Text("Pas encore de compte ? Créez-en un!"),
+            ),
+          ],
+        ),
       ),
     );
   }

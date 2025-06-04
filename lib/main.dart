@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:notesbycj/constants/routes.dart';
 import 'package:notesbycj/views/login_view.dart';
-import 'package:notesbycj/views/register_view.dart';
 import 'package:notesbycj/views/notes/notes_view.dart';
+import 'package:notesbycj/views/register_view.dart';
 import 'package:notesbycj/views/verify_email_view.dart';
 import 'package:notesbycj/services/auth/bloc/auth_bloc.dart';
 import 'package:notesbycj/services/auth/bloc/auth_event.dart';
@@ -22,10 +22,6 @@ void main() {
         child: const HomePage(),
       ),
       routes: {
-        loginRoute: (context) => const LoginView(),
-        notesRoute: (context) => const NotesView(),
-        registerRoute: (context) => const RegisterView(),
-        verifyEmailRoute: (context) => const VerifyEmailView(),
         createOrUpdateNoteRoute: (context) => const CreateUpdateNoteView(),
       },
     ),
@@ -46,6 +42,8 @@ class HomePage extends StatelessWidget {
           return const VerifyEmailView();
         } else if (state is AuthStateLoggedOut) {
           return const LoginView();
+        } else if (state is AuthStateRegistering) {
+          return const RegisterView();
         } else {
           return const Scaffold(body: CircularProgressIndicator());
         }
