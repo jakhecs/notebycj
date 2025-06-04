@@ -4,6 +4,7 @@ import 'package:notesbycj/constants/routes.dart';
 import 'package:notesbycj/services/auth/auth_exceptions.dart';
 import 'package:notesbycj/services/auth/bloc/auth_bloc.dart';
 import 'package:notesbycj/services/auth/bloc/auth_event.dart';
+import 'package:notesbycj/services/auth/bloc/auth_state.dart';
 import 'package:notesbycj/utilities/dialogs/error_dialog.dart';
 
 class LoginView extends StatefulWidget {
@@ -44,42 +45,26 @@ class _LoginViewState extends State<LoginView> {
             autocorrect: false,
             decoration: InputDecoration(hintText: 'Entrez votre mot de passe'),
           ),
-          TextButton(
-            onPressed: () async {
-              final email = _email.text;
-              final password = _password.text;
-
-              try {
-                context.read<AuthBloc>().add(AuthEventLogin(email, password));
-              } on UserNotFoundAuthException {
-                if (context.mounted) {
+          BlocListener<AuthBloc, AuthState>(
+            listener: (context, state) async {
+              if (state is AuthStateLoggedOut) {
+                if (state.exception is UserNotFoundAuthException) {
                   await showErrorDialog(context, 'Utilisateur introuvable.');
-                }
-              } on WrongPasswordAuthException {
-                if (context.mounted) {
-                  await showErrorDialog(context, 'Mot de passe incorrect.');
-                }
-              } on InvalidCredentialAuthException {
-                if (context.mounted) {
-                  await showErrorDialog(
-                    context,
-                    'Les identifiants fournis sont incorrects (email ou mot de passe invalide).',
-                  );
-                }
-              } on InvalidEmailAuthException {
-                if (context.mounted) {
-                  await showErrorDialog(context, 'Email invalide.');
-                }
-              } on GenericAuthException {
-                if (context.mounted) {
-                  await showErrorDialog(
-                    context,
-                    'Une erreur inconnue est survenue.',
-                  );
+                } else if (state.exception is InvalidCredentialAuthException) {
+                  await showErrorDialog(context, 'Identifiants  incorrects.');
+                } else if (state.exception is GenericAuthException) {
+                  await showErrorDialog(context, 'Errer inconnu est survenue.');
                 }
               }
             },
-            child: const Text('Connexion'),
+            child: TextButton(
+              onPressed: () {
+                final email = _email.text;
+                final password = _password.text;
+                context.read<AuthBloc>().add(AuthEventLogin(email, password));
+              },
+              child: const Text('Connexion'),
+            ),
           ),
           TextButton(
             onPressed: () {
