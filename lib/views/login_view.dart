@@ -37,7 +37,10 @@ class _LoginViewState extends State<LoginView> {
       listener: (context, state) async {
         if (state is AuthStateLoggedOut) {
           if (state.exception is UserNotFoundAuthException) {
-            await showErrorDialog(context, 'Utilisateur introuvable.');
+            await showErrorDialog(
+              context,
+              'Impossible de trouver l\'utilisateur avec cet email.',
+            );
           } else if (state.exception is InvalidCredentialAuthException) {
             await showErrorDialog(context, 'Identifiants  incorrects.');
           } else if (state.exception is GenericAuthException) {
@@ -47,39 +50,48 @@ class _LoginViewState extends State<LoginView> {
       },
       child: Scaffold(
         appBar: AppBar(title: const Text('Connexion')),
-        body: Column(
-          children: [
-            TextField(
-              controller: _email,
-              enableSuggestions: false,
-              autocorrect: false,
-              keyboardType: TextInputType.emailAddress,
-              decoration: InputDecoration(hintText: 'Entrez votre email'),
-            ),
-            TextField(
-              controller: _password,
-              obscureText: true,
-              enableSuggestions: false,
-              autocorrect: false,
-              decoration: InputDecoration(
-                hintText: 'Entrez votre mot de passe',
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              TextField(
+                controller: _email,
+                enableSuggestions: false,
+                autocorrect: false,
+                keyboardType: TextInputType.emailAddress,
+                decoration: InputDecoration(hintText: 'Entrez votre email'),
               ),
-            ),
-            TextButton(
-              onPressed: () {
-                final email = _email.text;
-                final password = _password.text;
-                context.read<AuthBloc>().add(AuthEventLogin(email, password));
-              },
-              child: const Text('Connexion'),
-            ),
-            TextButton(
-              onPressed: () {
-                context.read<AuthBloc>().add(const AuthEventShouldRegister());
-              },
-              child: const Text("Pas encore de compte ? Créez-en un!"),
-            ),
-          ],
+              TextField(
+                controller: _password,
+                obscureText: true,
+                enableSuggestions: false,
+                autocorrect: false,
+                decoration: InputDecoration(
+                  hintText: 'Entrez votre mot de passe',
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  final email = _email.text;
+                  final password = _password.text;
+                  context.read<AuthBloc>().add(AuthEventLogin(email, password));
+                },
+                child: const Text('Connexion'),
+              ),
+              TextButton(
+                onPressed: () {
+                  context.read<AuthBloc>().add(const AuthEventForgotPassword());
+                },
+                child: const Text('Mot de passe oublié?'),
+              ),
+              TextButton(
+                onPressed: () {
+                  context.read<AuthBloc>().add(const AuthEventShouldRegister());
+                },
+                child: const Text("Pas encore de compte ? Créez-en un!"),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -26,6 +26,16 @@ class AuthStateLoggedIn extends AuthState {
   const AuthStateLoggedIn({required super.isLoading, required this.user});
 }
 
+class AuthStateForgotPassword extends AuthState {
+  final Exception? exception;
+  final bool hasSentEmail;
+  const AuthStateForgotPassword({
+    required super.isLoading,
+    this.exception,
+    required this.hasSentEmail,
+  });
+}
+
 class AuthStateNeedsVerification extends AuthState {
   const AuthStateNeedsVerification({required super.isLoading});
 }
